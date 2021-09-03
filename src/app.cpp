@@ -33,12 +33,15 @@ int main() {
 		ConvertToRgbPixel(0x00, 0x44, 0x00),
 		ConvertToRgbPixel(0x00, 0x88, 0x00)
 	};
-	hardware::neopixel::Start(0 /* pin */, 7 /* leds_count */, 1 /* starting_led */, colors);
+	hardware::NeoPixelSensor neo_pixel_sensor(0 /* pin */, 7 /* leds_count */, 1 /* starting_led */, colors);
+
+	neo_pixel_sensor.start();
 
 	while (true) {
 		double progress = moisture_sensor.normalisedValue();
 		printf("Moisture progress from sensor is: %.6f\n", progress);
-		hardware::neopixel::SetProgress(progress);
+		neo_pixel_sensor.setProgress(progress);
+
 		sleep_ms(400);
     }
 }

@@ -20,67 +20,58 @@ inline void PutPixel(uint32_t rgb_pixel) {
     pio_sm_put_blocking(DEFAULT_PIO, 0, rgb_pixel << 8u);
 }
 
-uint32_t const BLACK_COLOR = 0;
-
 } // namespace
 
 namespace hardware {
 
-namespace neopixel {
+void ParallelPixelsProcessor() {
+    uint32_t rawSelf = multicore_fifo_pop_blocking();
+    NeoPixelSensor* self = reinterpret_cast<NeoPixelSensor*>(rawSelf);
 
-uint8_t Pin;
-
-uint32_t LedsCount;
-uint32_t StartingLed;
-uint32_t ActiveLedsCount;
-uint32_t const* Colors;
-
-uint32_t SelectedColor;
-
-void LedsCoreLooper() {
     while (true) {
-        for(uint32_t i = 0; i < StartingLed; i++) {
-            PutPixel(BLACK_COLOR);
-        }
-
-        for(uint32_t i = StartingLed; i < StartingLed + ActiveLedsCount; i++) {
-            PutPixel(Colors[SelectedColor - 1]);
-        }
-
-        for(uint32_t i = StartingLed + ActiveLedsCount; i < LedsCount; i++) {
-            PutPixel(BLACK_COLOR);
+        for (uint32_t i = 0; i < self->size(); i++) {
+            PutPixel(self->pixelAt(i));
         }
 
         sleep_us(400);
     }
 }
 
-void Start(uint8_t pin, uint32_t leds_count, uint32_t starting_led, uint32_t colors[]) {
+NeoPixelSensor::NeoPixelSensor(uint8_t pin, uint32_t leds_count, uint32_t starting_led, uint32_t colors[]): _pin(pin), _leds_count(leds_count), _starting_led(starting_led), _colors(colors), _selected_color(0), _active_color(0) {
     uint32_t offset = pio_add_program(DEFAULT_PIO, &ws2812_program);
     ws2812_program_init(DEFAULT_PIO, STATE_MACHINE, offset, pin, WORKING_FREQ, IS_32BIT_ALIGNMENT);
 
-    Pin = pin;
-    LedsCount = leds_count;
-    StartingLed = starting_led;
-    Colors = colors;
+    for(int i = 0; i < size(); i++) {
+        PutPixel(0);
+    }
+}
 
-    SelectedColor = 0;
-    ActiveLedsCount = 0;
-
-    for(int i = 0; i < LedsCount; i++) {
-        PutPixel(BLACK_COLOR);
+uint32_t NeoPixelSensor::pixelAt(uint32_t pixel) {
+    if (pixel < _starting_led) {
+        return 0;
     }
 
-    multicore_launch_core1(LedsCoreLooper);
+    if (pixel < _starting_led + _active_color) {
+        return _colors[_selected_color];
+    }
+
+    return 0;
 }
 
-void SetProgress(double progress) {
-    uint32_t used_leds = LedsCount - StartingLed;
+uint32_t NeoPixelSensor::size() {
+    return _leds_count;
+}
+
+void NeoPixelSensor::start() {
+    multicore_launch_core1(ParallelPixelsProcessor);
+    multicore_fifo_push_blocking(reinterpret_cast<std::uintptr_t>(this));
+}
+
+void NeoPixelSensor::setProgress(double progress) {
+    uint32_t used_leds = size() - _starting_led;
     uint32_t active_led = used_leds * progress + 0.5 /* round up */;
-    SelectedColor = active_led;
-    ActiveLedsCount = active_led;
-}
-
+    _selected_color = active_led;
+    _active_color = active_led;
 }
 
 } // namespace hardware

@@ -5,13 +5,27 @@
 
 namespace hardware {
 
-namespace neopixel {
+class NeoPixelSensor {
+private:
+    uint8_t const _pin;
+    uint32_t const _leds_count;
+    uint32_t const _starting_led;
+    uint32_t const* _colors;
 
-void Start(uint8_t pin, uint32_t leds_count, uint32_t starting_led, uint32_t colors[]);
+    uint32_t _selected_color;
+    uint32_t _active_color;
 
-void SetProgress(double progress);
+public:
+    NeoPixelSensor(uint8_t pin, uint32_t leds_count, uint32_t starting_led, uint32_t colors[]);
 
-} // namespace neopixel
+    uint32_t pixelAt(uint32_t pixel);
+
+    void setProgress(double progress);
+
+    uint32_t size();
+
+    void start();
+};
 
 } // namespace hardware
 

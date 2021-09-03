@@ -1,1 +1,3 @@
-# pico_potato_moisture
+# Plants moisture detector
+
+
