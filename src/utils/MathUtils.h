@@ -1,15 +1,45 @@
 #ifndef SRC_UTILS_MATHUTILS_H
 #define SRC_UTILS_MATHUTILS_H
 
-#include <cstdint>
-
 namespace utils {
 
-uint32_t min(uint32_t a, uint32_t b);
+template <class T>
+T min(T a, T b) {
+    if (a < b) {
+        return a;
+    }
 
-uint32_t max(uint32_t a, uint32_t b);
+    return b;
+}
 
-uint32_t clamp(uint32_t value, uint32_t min_value, uint32_t max_value);
+template <class T>
+T max(T a, T b) {
+    if (a > b) {
+        return a;
+    }
+
+    return b;
+}
+
+template <class T>
+T clamp(T value, T min_value, T max_value) {
+    return max(min(value, max_value), min_value);
+}
+
+template <class T>
+T lerp(T a, T b, T fraction) {
+    return a + fraction * (b - a);
+}
+
+template <class T, class R>
+R floor(T num) {
+    return (R) num - 0.5;
+}
+
+template <class T, class R>
+R ceiling(T num) {
+    return (R) num + 0.5;
+}
 
 } // namespace utils
 

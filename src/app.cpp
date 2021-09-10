@@ -1,47 +1,58 @@
 #include <cstdint>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
 
+#include "./hardware/moisture/MoistureModifier.h"
 #include "./hardware/moisture/MoistureSensor.h"
-#include "./hardware/leds/NeoPixelSensor.h"
 
-namespace {
-
-inline uint32_t ConvertToRgbPixel(uint8_t r, uint8_t g, uint8_t b) {
-    return  ((uint32_t) (r) << 8) |
-            ((uint32_t) (g) << 16) |
-            (uint32_t) (b);
-}
-
-} // namespace
+#include "./hardware/leds/LedColor.h"
+#include "./hardware/leds/LedsStrip.h"
+#include "./hardware/leds/modifiers/BlinkingModifier.h"
+#include "./hardware/leds/modifiers/SolidColorModifier.h"
 
 int main() {
 	stdio_init_all();
 
 	adc_init();
 
-	hardware::MoistureSensor moisture_sensor(26 /* pin */, 1400U /* min current, water */, 3500U /* max current, air */);
-	
-	uint32_t colors[] = {
-		ConvertToRgbPixel(0x44, 0x00, 0x00),
-		ConvertToRgbPixel(0x88, 0x00, 0x00),
-		ConvertToRgbPixel(0x44, 0x44, 0x00),
-		ConvertToRgbPixel(0x88, 0x88, 0x00),
-		ConvertToRgbPixel(0x00, 0x44, 0x00),
-		ConvertToRgbPixel(0x00, 0x88, 0x00)
-	};
-	hardware::NeoPixelSensor neo_pixel_sensor(0 /* pin */, 7 /* leds_count */, 1 /* starting_led */, colors);
+	hardware::MoistureSensor moisture_sensor(
+		26 /* pin */, 
+		1400U /* min current, water */, 
+		3500U /* max current, air */
+	);
 
-	neo_pixel_sensor.start();
+	hardware::LedsStrip leds_strip(
+		0 /* pin */,
+		7 /* stripe size */
+	);
+
+	hardware::MoistureModifier moisture_led_modifier(
+		&moisture_sensor /* sensor */,
+		hardware::LedColor::RED.withBrigthness(0.5) /* start color */,
+		hardware::LedColor::GREEN.withBrigthness(0.5) /* finish color */
+	);
+
+	hardware::SolidColorModifier red_color_modifier(
+		hardware::LedColor::RED.withBrigthness(0.1) /* color */
+	);
+
+	hardware::BlinkingModifier blink_modifier(
+		5000 /* delay idle in ms */,
+		1000 /* delay working in ms */
+	);
+
+	leds_strip.addModifier(&red_color_modifier, 0, 0);
+	leds_strip.addModifier(&blink_modifier, 0, 0);
+
+	leds_strip.addModifier(&moisture_led_modifier, 1);
 
 	while (true) {
-		double progress = moisture_sensor.normalisedValue();
-		printf("Moisture progress from sensor is: %.6f\n", progress);
-		neo_pixel_sensor.setProgress(progress);
-
-		sleep_ms(400);
+		leds_strip.update();
+		sleep_ms(300);
     }
+
+	return 0;
 }

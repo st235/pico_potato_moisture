@@ -19,15 +19,31 @@ pico_enable_stdio_uart(potato_moisture 1)
 target_sources(potato_moisture 
                PRIVATE src/app.cpp
 
+                       src/hardware/moisture/MoistureModifier.h
+                       src/hardware/moisture/MoistureModifier.cpp
+
                        src/hardware/moisture/MoistureSensor.h
                        src/hardware/moisture/MoistureSensor.cpp
 
-                       src/hardware/leds/NeoPixelSensor.h
-                       src/hardware/leds/NeoPixelSensor.cpp
+                       src/hardware/leds/LedColor.h
+                       src/hardware/leds/LedColor.cpp
 
-                       src/utils/MathUtils.h
-                       src/utils/MathUtils.cpp)
+                       src/hardware/leds/LedsStrip.h
+                       src/hardware/leds/LedsStrip.cpp
 
-target_link_libraries(potato_moisture PRIVATE pico_stdlib hardware_pio pico_multicore hardware_adc)
+                       src/hardware/leds/modifiers/LightModifier.h
+
+                       src/hardware/leds/modifiers/SolidColorModifier.h
+                       src/hardware/leds/modifiers/SolidColorModifier.cpp
+
+                       src/hardware/leds/modifiers/BlinkingModifier.h
+                       src/hardware/leds/modifiers/BlinkingModifier.cpp
+
+                       src/hardware/leds/modifiers/ProgressiveModifier.h
+                       src/hardware/leds/modifiers/ProgressiveModifier.cpp
+
+                       src/utils/MathUtils.h)
+
+target_link_libraries(potato_moisture PRIVATE pico_stdlib hardware_pio pico_multicore pico_time hardware_adc)
 pico_add_extra_outputs(potato_moisture)
 
