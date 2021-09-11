@@ -7,10 +7,8 @@ SMS or Soil Moisture Sensor is a small firmware for your raspberry pi pico board
 First of all, you need to build binary for your `pi pico`. Just follow the instructions below to assemble executable for your board:
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make .
+mkdir build && cd build
+cmake .. && make
 ```
 
 If this step is over then congratulations 🥳 Now you need to connect your board to pc and copy the `potato_moisture.uf2` file from `build` folder.

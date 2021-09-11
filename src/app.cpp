@@ -3,7 +3,10 @@
 #include <stdio.h>
 
 #include "pico/stdlib.h"
+#include "pico/time.h"
 #include "hardware/adc.h"
+
+#include "Constants.h"
 
 #include "./hardware/moisture/MoistureModifier.h"
 #include "./hardware/moisture/MoistureSensor.h"
@@ -13,10 +16,14 @@
 #include "./hardware/leds/modifiers/BlinkingModifier.h"
 #include "./hardware/leds/modifiers/SolidColorModifier.h"
 
+#include "./hardware/timer/SystemTimer.h"
+
 int main() {
 	stdio_init_all();
 
 	adc_init();
+
+	hardware::SystemTimer system_timer(TIMEZONE, BUILD_TIMESTAMP);
 
 	hardware::MoistureSensor moisture_sensor(
 		26 /* pin */, 
@@ -50,7 +57,15 @@ int main() {
 	leds_strip.addModifier(&moisture_led_modifier, 1);
 
 	while (true) {
-		leds_strip.update();
+		uint8_t current_hour = system_timer.getHours();
+		printf("Current time: %02u:%02u:%02u\n", system_timer.getHours(), system_timer.getMinutes(), system_timer.getSeconds());
+
+		if (current_hour >= WORKING_MIN_HOUR && current_hour <= WORKING_MAX_HOUR) {
+			leds_strip.update();
+		} else {
+			leds_strip.clear();
+		}
+
 		sleep_ms(300);
     }
 

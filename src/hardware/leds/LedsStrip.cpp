@@ -44,7 +44,10 @@ LedsStrip::LedsStrip(uint8_t pin, uint16_t stripe_size): _pin(pin),
     uint32_t offset = pio_add_program(DEFAULT_PIO, &ws2812_program);
     ws2812_program_init(DEFAULT_PIO, STATE_MACHINE, offset, pin, WORKING_FREQ, IS_32BIT_ALIGNMENT);
 
-    clear();
+    for(int i = 0; i < size(); i++) {
+        _enabled[i] = true;
+        _colors[i] = LedColor::BLACK;
+    }
 }
 
 void LedsStrip::setEnabled(uint16_t led, bool enabled) {
@@ -120,7 +123,10 @@ void LedsStrip::clear() {
     for(int i = 0; i < size(); i++) {
         _enabled[i] = true;
         _colors[i] = LedColor::BLACK;
+        PutPixel(_colors[i]);
     }
+
+    sleep_us(400);
 }
 
 uint16_t LedsStrip::size() const {
